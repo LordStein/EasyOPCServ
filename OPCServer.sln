@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPCServer", "OPCServer\OPCServer.csproj", "{14598E74-6E45-4970-A76B-63E339ECFF8C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+		x32|Any CPU = x32|Any CPU
+		x32|x86 = x32|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Debug|x86.ActiveCfg = Debug|x86
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Debug|x86.Build.0 = Debug|x86
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Release|x86.ActiveCfg = Release|x86
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.Release|x86.Build.0 = Release|x86
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.x32|Any CPU.ActiveCfg = Debug|Any CPU
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.x32|Any CPU.Build.0 = Debug|Any CPU
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.x32|x86.ActiveCfg = x32|x86
+		{14598E74-6E45-4970-A76B-63E339ECFF8C}.x32|x86.Build.0 = x32|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

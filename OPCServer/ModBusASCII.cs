@@ -35,13 +35,33 @@ namespace OPCServer
         System.IO.Ports.SerialPort Port;
 
         /// <summary>
+        /// Ошибка порта при инициализации
+        /// </summary>
+        public bool porterror { private set; get; }
+        /// <summary>
+        /// код ошибки инициализации порта
+        /// </summary>
+        public string porterrstr { private set; get; }
+
+        /// <summary>
         /// Буффер принятых данных
         /// </summary>
         public byte[] EnteredData { private set; get; }
         /// <summary>
         /// Количество данных в буфере
         /// </summary>
-        public int DataCount { private set; get; }
+        int DataCount;
+
+        /// <summary>
+        /// Имя порта.
+        /// </summary>
+        public string Portname
+        {
+            get
+            {
+                return this.Port.PortName;
+            }
+        }
 
         #endregion
 
@@ -53,8 +73,17 @@ namespace OPCServer
         /// <param name="Port">Ссылка на порт</param>
         public ModBusASCII(System.IO.Ports.SerialPort Port)
         {
+            porterror = false;
             this.Port = Port;
-            if (!this.Port.IsOpen) this.Port.Open();
+            try
+            {
+                if (!this.Port.IsOpen) this.Port.Open();
+            }
+            catch (Exception exc)
+            {
+                porterror = true;
+                porterrstr = "Ошибка COM порта " + exc.Message;
+            }
             //this.Port.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(Port_DataReceived);
             EnteredData = new byte[256];
             DataCount = 0;
@@ -82,11 +111,35 @@ namespace OPCServer
         /// Прочитать данные из буфера в числовом формате, данные помещаются в буфер EnteredData, количество в DataCount
         /// </summary>
         /// <returns></returns>
-        public void ReadData()
+        public int ReadData()
         {
-            DataCount = Port.BytesToRead;
-            Port.Read(EnteredData, 0, DataCount);
-            if (DataCount > 3) EnteredData = ChrtoBin(EnteredData, DataCount);
+            int exitcode = 0;
+            try
+            {
+                DataCount = Port.BytesToRead;
+                Port.Read(EnteredData, 0, DataCount);
+            }
+            catch (Exception)
+            {
+                exitcode = 1;
+            }
+            if (exitcode != 1)
+            {
+                if (DataCount < 10) exitcode = 2;
+                else
+                {
+                    EnteredData = ChrtoBin(EnteredData, ref DataCount);
+                    if (EnteredData[DataCount - 1] != CRC(EnteredData, DataCount))
+                        exitcode = 3;
+                    else
+                        if ((EnteredData[2] & 128) == 128)
+                        {
+                            exitcode = EnteredData[3] + 10;
+                        }
+                }
+
+            }
+            return exitcode;
         }
 
         /// <summary>
@@ -108,6 +161,19 @@ namespace OPCServer
         {
             byte temp = 0;
             for (int i = 1; i < data.Length - 3; temp += data[i++]) ;
+            return (byte)(0xFF - temp + 1);
+        }
+
+        /// <summary>
+        /// Расчет контрольной суммы заданного числа байт
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        private byte CRC(byte[] data, int count)
+        {
+            byte temp = 0;
+            for (int i = 1; i < count - 1; temp += data[i++]) ;
             return (byte)(0xFF - temp + 1);
         }
 
@@ -148,24 +214,25 @@ namespace OPCServer
             // проверка правильности адреса и его корректировка под протокол
             // в котором считывание начинается не с указанного адреса,
             // а со следующего
-            if (StartRegAdr > 0) StartRegAdr--;
-            else if (StartRegAdr < 0) StartRegAdr = -StartRegAdr;
-
+            /*if (StartRegAdr > 0) StartRegAdr--;
+            else if (StartRegAdr < 0) StartRegAdr = -StartRegAdr;*/
             int exitcode = 0;
-            byte[] iobuff = new byte[10];
-            iobuff[0] = 0x3A;
-            iobuff[1] = SlaveAdres;
-            iobuff[2] = comand;
-            iobuff[3] = (byte)((StartRegAdr & 0xFF00) >> 8);
-            iobuff[4] = (byte)(StartRegAdr & 0xFF);
-            iobuff[5] = (byte)((NumRegtoRead & 0xFF00) >> 8);
-            iobuff[6] = (byte)(NumRegtoRead & 0xFF);
-            iobuff[7] = CRC(iobuff);
-            iobuff[8] = 0xD;
-            iobuff[9] = 0xA;
-            byte[] outbuff = BintoChr(iobuff);
-            if (Port.IsOpen)
+            if (Port != null)
             {
+                //Port.Close();
+                //Port.Open();
+                byte[] iobuff = new byte[10];
+                iobuff[0] = 0x3A;
+                iobuff[1] = SlaveAdres;
+                iobuff[2] = comand;
+                iobuff[3] = (byte)((StartRegAdr & 0xFF00) >> 8);
+                iobuff[4] = (byte)(StartRegAdr & 0xFF);
+                iobuff[5] = (byte)((NumRegtoRead & 0xFF00) >> 8);
+                iobuff[6] = (byte)(NumRegtoRead & 0xFF);
+                iobuff[7] = CRC(iobuff);
+                iobuff[8] = 0xD;
+                iobuff[9] = 0xA;
+                byte[] outbuff = BintoChr(iobuff);
                 ClearBuffer();
                 try
                 {
@@ -218,7 +285,7 @@ namespace OPCServer
         private byte BintoChr(byte data)
         {
             if ((data >= 0) & (data <= 9)) return (byte)(data + 48);
-            else if ((data >= 10) & (data <= 15)) return (byte)(data + 65);
+            else if ((data >= 10) & (data <= 15)) return (byte)(data + 55);
             else return 48;
         }
 
@@ -244,7 +311,7 @@ namespace OPCServer
         /// </summary>
         /// <param name="data">Массив источник</param>
         /// <param name="count">Число значащих байт в массиве</param>
-        public byte[] ChrtoBin(byte[] data, int count)
+        public byte[] ChrtoBin(byte[] data, ref int count)
         {
             byte[] mout = new byte[data.Length];
             mout[0] = data[0];
@@ -252,6 +319,7 @@ namespace OPCServer
             {
                 mout[(i + 1) / 2] = (byte)((ChrtoBin(data[i]) * 16) + ChrtoBin(data[i + 1]));
             }
+            count = (count - 1) / 2;
             return mout;
         }
 
@@ -263,7 +331,7 @@ namespace OPCServer
         private byte ChrtoBin(byte data)
         {
             if ((data >= 48) & (data <= 57)) return (byte)(data - 48);
-            else if ((data >= 65) & (data <= 70)) return (byte)(data - 65);
+            else if ((data >= 65) & (data <= 70)) return (byte)(data - 55);
             else return 0;
         }
 
