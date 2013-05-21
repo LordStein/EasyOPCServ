@@ -66,30 +66,19 @@ namespace OPCServer
         private void RefreshInfo()
         {
             string Info;
+
             int _month = testDev.MonthofProdaction;
-            if (testDev.iserror)
-            {
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                adderrortext(Info + testDev.errorcode + "\r\n");
-            }
+            if (testDev.iserror) ShowError();
+
             int _year = testDev.YearofProduction;
-            if (testDev.iserror)
-            {
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                adderrortext(Info + testDev.errorcode + "\r\n");
-            }
+            if (testDev.iserror) ShowError();
+
             int _serial = testDev.SerialNumber;
-            if (testDev.iserror)
-            {
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                adderrortext(Info + testDev.errorcode + "\r\n");
-            }
+            if (testDev.iserror) ShowError();
+
             D250M.ArchRecord _testrecord = new D250M.ArchRecord();
-            if (!testDev.GetLastArchRecord(ref _testrecord))
-            {
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                adderrortext(Info + testDev.errorcode + "\r\n");
-            }
+            if (!testDev.GetLastArchRecord(ref _testrecord)) ShowError();
+
             Info = "Прибор произведен: " + _month + ".";
             if (_year < 10) Info += "200" + _year;
             else Info += "20" + _year;
@@ -97,6 +86,16 @@ namespace OPCServer
             Info += "Последняя архивная запись: " + _testrecord.Hour + ":" + _testrecord.Minute;
             Info += " измерено: " + _testrecord.Data;
             addtext(Info);
+        }
+
+        /// <summary>
+        /// Вывести ошибку в лог
+        /// </summary>
+        private void ShowError()
+        {
+            string Info;
+            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+            adderrortext(Info + testDev.errorcode + "\r\n");
         }
 
         /// <summary>

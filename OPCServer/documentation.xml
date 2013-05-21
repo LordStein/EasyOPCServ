@@ -4,6 +4,160 @@
         <name>OPCServer</name>
     </assembly>
     <members>
+        <member name="T:OPCServer.Form1">
+            <summary>
+            основной класс программы
+            </summary>
+        </member>
+        <member name="M:OPCServer.Form1.#ctor">
+            <summary>
+            Инициализация формы приложения
+            </summary>
+        </member>
+        <member name="M:OPCServer.Form1.button1_Click(System.Object,System.EventArgs)">
+            <summary>
+            На каждое считывание создается отдельный поток
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.RefreshInfo">
+            <summary>
+            Отдельный поток считыания информации
+            </summary>
+        </member>
+        <member name="M:OPCServer.Form1.ShowError">
+            <summary>
+            Вывести ошибку в лог
+            </summary>
+        </member>
+        <member name="M:OPCServer.Form1.addtext(System.String)">
+            <summary>
+            Внесение изменений в форму, по окончании считывания
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:OPCServer.Form1.Form1_Load(System.Object,System.EventArgs)">
+            <summary>
+            Загрузка формы, начальная инициализация
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.ConnectToOrclBase">
+            <summary>
+            Попытка подключения к базе данных
+            </summary>
+        </member>
+        <member name="M:OPCServer.Form1.ProgramClosed(System.Object,System.Windows.Forms.FormClosedEventArgs)">
+            <summary>
+            Закрытие программы
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="F:OPCServer.Form1.components">
+            <summary>
+            Требуется переменная конструктора.
+            </summary>
+        </member>
+        <member name="M:OPCServer.Form1.Dispose(System.Boolean)">
+            <summary>
+            Освободить все используемые ресурсы.
+            </summary>
+            <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
+        </member>
+        <member name="M:OPCServer.Form1.InitializeComponent">
+            <summary>
+            Обязательный метод для поддержки конструктора - не изменяйте
+            содержимое данного метода при помощи редактора кода.
+            </summary>
+        </member>
+        <member name="T:OPCServer.D250M">
+            <summary>
+            Диск 250М, свойства и методы доступа к прибору
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.Rdelay">
+            <summary>
+            Величина задержки приема
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.Delayer">
+            <summary>
+            Таймер сброса задержки чтения
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.Device">
+            <summary>
+            Порт связи
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.stop">
+            <summary>
+            Для организации выхода из задержки
+            </summary>
+        </member>
+        <member name="M:OPCServer.D250M.#ctor(System.IO.Ports.SerialPort,System.Byte)">
+            <summary>
+            Конструктор с передачей порта связи и заданием адреса
+            </summary>
+            <param name="COM">"Порт для связи"</param>
+            <param name="Adres">"Адрес Диск 250М"</param>
+        </member>
+        <member name="M:OPCServer.D250M.Delayer_Elapsed(System.Object,System.Timers.ElapsedEventArgs)">
+            <summary>
+            Сбрасывает цикл ожидания
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.D250M.GetLastArchRecord(OPCServer.D250M.ArchRecord@)">
+            <summary>
+            Чтение последней записи архива, при успехе возвращает true
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:OPCServer.D250M.iserror">
+            <summary>
+            Признак ошибки последней операции
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.errorcode">
+            <summary>
+            Код ошибки последней операции
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.Adres">
+            <summary>
+            Адрес ведомого, 0-127
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.SerialNumber">
+            <summary>
+            Тестовый адрес считывания
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.DataNow">
+            <summary>
+            Данные последнего измерения
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.ErrorReg">
+            <summary>
+            Регистр состояния ошибок
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.YearofProduction">
+            <summary>
+            Год производства прибора
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250M.MonthofProdaction">
+            <summary>
+            Месяц изготовления прибора
+            </summary>
+        </member>
         <member name="T:OPCServer.ModBusASCII">
             <summary>
             Класс для работы с ModBus ASCII протоколом
@@ -187,155 +341,6 @@
             <summary>
               Переопределяет свойство CurrentUICulture текущего потока для всех
               подстановки ресурсов с помощью этого класса ресурсов со строгим типом.
-            </summary>
-        </member>
-        <member name="T:OPCServer.Form1">
-            <summary>
-            основной класс программы
-            </summary>
-        </member>
-        <member name="M:OPCServer.Form1.#ctor">
-            <summary>
-            Инициализация формы приложения
-            </summary>
-        </member>
-        <member name="M:OPCServer.Form1.button1_Click(System.Object,System.EventArgs)">
-            <summary>
-            На каждое считывание создается отдельный поток
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:OPCServer.Form1.RefreshInfo">
-            <summary>
-            Отдельный поток считыания информации
-            </summary>
-        </member>
-        <member name="M:OPCServer.Form1.addtext(System.String)">
-            <summary>
-            Внесение изменений в форму, по окончании считывания
-            </summary>
-            <param name="text"></param>
-        </member>
-        <member name="M:OPCServer.Form1.Form1_Load(System.Object,System.EventArgs)">
-            <summary>
-            Загрузка формы, начальная инициализация
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:OPCServer.Form1.ConnectToOrclBase">
-            <summary>
-            Попытка подключения к базе данных
-            </summary>
-        </member>
-        <member name="M:OPCServer.Form1.ProgramClosed(System.Object,System.Windows.Forms.FormClosedEventArgs)">
-            <summary>
-            Закрытие программы
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="F:OPCServer.Form1.components">
-            <summary>
-            Требуется переменная конструктора.
-            </summary>
-        </member>
-        <member name="M:OPCServer.Form1.Dispose(System.Boolean)">
-            <summary>
-            Освободить все используемые ресурсы.
-            </summary>
-            <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
-        </member>
-        <member name="M:OPCServer.Form1.InitializeComponent">
-            <summary>
-            Обязательный метод для поддержки конструктора - не изменяйте
-            содержимое данного метода при помощи редактора кода.
-            </summary>
-        </member>
-        <member name="T:OPCServer.D250M">
-            <summary>
-            Диск 250М, свойства и методы доступа к прибору
-            </summary>
-        </member>
-        <member name="F:OPCServer.D250M.Rdelay">
-            <summary>
-            Величина задержки приема
-            </summary>
-        </member>
-        <member name="F:OPCServer.D250M.Delayer">
-            <summary>
-            Таймер сброса задержки чтения
-            </summary>
-        </member>
-        <member name="F:OPCServer.D250M.Device">
-            <summary>
-            Порт связи
-            </summary>
-        </member>
-        <member name="F:OPCServer.D250M.stop">
-            <summary>
-            Для организации выхода из задержки
-            </summary>
-        </member>
-        <member name="M:OPCServer.D250M.#ctor(System.IO.Ports.SerialPort,System.Byte)">
-            <summary>
-            Конструктор с передачей порта связи и заданием адреса
-            </summary>
-            <param name="COM">"Порт для связи"</param>
-            <param name="Adres">"Адрес Диск 250М"</param>
-        </member>
-        <member name="M:OPCServer.D250M.Delayer_Elapsed(System.Object,System.Timers.ElapsedEventArgs)">
-            <summary>
-            Сбрасывает цикл ожидания
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:OPCServer.D250M.GetLastArchRecord(OPCServer.D250M.ArchRecord@)">
-            <summary>
-            Чтение последней записи архива, при успехе возвращает true
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="P:OPCServer.D250M.iserror">
-            <summary>
-            Признак ошибки последней операции
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.errorcode">
-            <summary>
-            Код ошибки последней операции
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.Adres">
-            <summary>
-            Адрес ведомого, 0-127
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.SerialNumber">
-            <summary>
-            Тестовый адрес считывания
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.DataNow">
-            <summary>
-            Данные последнего измерения
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.ErrorReg">
-            <summary>
-            Регистр состояния ошибок
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.YearofProduction">
-            <summary>
-            Год производства прибора
-            </summary>
-        </member>
-        <member name="P:OPCServer.D250M.MonthofProdaction">
-            <summary>
-            Месяц изготовления прибора
             </summary>
         </member>
         <member name="M:OPCServer.Program.Main">
