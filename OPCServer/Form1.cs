@@ -19,17 +19,22 @@ namespace OPCServer
     {
         delegate void SetTextCallback(string text);
 
-        const string userID = "Oleg";
-        const string password = "123456";
-        const string dataSource = "orcl";
+        const string userID = "ST";
+        const string password = "12345";
+        const string dataSource = "XE";
 
-        const string ConnectionString = "User Id=" + userID +
+        /*const string ConnectionString = "User Id=" + userID +
                      ";Password=" + password +
-                     ";Data Source=" + dataSource + ";";
+                     ";Data Source=" + dataSource + ";"; */
+        /*const string ConnectionString = "Data Source=" + dataSource + ";" + "User Id=" + userID +
+                     ";Password=" + password + ";"; */
+
+        const string ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = microsof-eed687)(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=ST;Password=1234";
 
         D250M testDev;
 
         OracleConnection OracleBaseCon;
+        bool BaseIsOpen = false;
 
         /// <summary>
         /// Инициализация формы приложения
@@ -144,6 +149,7 @@ namespace OPCServer
                 this.textBox2.AppendText(Info + testDev.errorcode + "\r\n");
                 button1.Enabled = false;
             }
+            OracleBaseCon = new OracleConnection();
         }
 
         /// <summary>
@@ -153,15 +159,25 @@ namespace OPCServer
         {
             try
             {
-                OracleBaseCon = new OracleConnection();
                 OracleBaseCon.ConnectionString = ConnectionString;
                 OracleBaseCon.Open();
+                BaseIsOpen = true;
+                button2.Enabled = false;
+                string sql = "select loc from dept" + " where deptno = 10";
+                OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
+                cmd.CommandType = CommandType.Text;
+                OracleDataReader dr = cmd.ExecuteReader();
+                dr.Read();
+                textBox2.AppendText(dr.GetString(0));
+
             }
             catch (Exception exc)
             {
+                button2.Enabled = true;
+                BaseIsOpen = false;
                 string Info;
                 Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                textBox2.AppendText(Info + exc.Message);
+                textBox2.AppendText(Info + exc.Message + "\r\n");
             }
         }
 
@@ -175,7 +191,7 @@ namespace OPCServer
         private void ProgramClosed(object sender, FormClosedEventArgs e)
         {
             if (CPORT != null) CPORT.Close();
-            OracleBaseCon.Close();            
+            if (BaseIsOpen) OracleBaseCon.Close();            
         }
 
         private void connclick(object sender, EventArgs e)
