@@ -19,16 +19,20 @@ namespace OPCServer
     {
         delegate void SetTextCallback(string text);
 
-        const string userID = "ST";
-        const string password = "12345";
-        const string dataSource = "XE";
-
-        /*const string ConnectionString = "User Id=" + userID +
+        /*
+         * const string userID = "ST";
+         * const string password = "12345";
+         * const string dataSource = "XE";
+         * 
+         * const string ConnectionString = "User Id=" + userID +
                      ";Password=" + password +
-                     ";Data Source=" + dataSource + ";"; */
-        /*const string ConnectionString = "Data Source=" + dataSource + ";" + "User Id=" + userID +
+                     ";Data Source=" + dataSource + ";";
+           const string ConnectionString = "Data Source=" + dataSource + ";" + "User Id=" + userID +
                      ";Password=" + password + ";"; */
 
+        /// <summary>
+        /// Строка подключения к базе данных
+        /// </summary>
         const string ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = microsof-eed687)(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=ST;Password=1234";
 
         D250M testDev;
@@ -163,13 +167,6 @@ namespace OPCServer
                 OracleBaseCon.Open();
                 BaseIsOpen = true;
                 button2.Enabled = false;
-                string sql = "select loc from dept" + " where deptno = 10";
-                OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
-                cmd.CommandType = CommandType.Text;
-                OracleDataReader dr = cmd.ExecuteReader();
-                dr.Read();
-                textBox2.AppendText(dr.GetString(0));
-
             }
             catch (Exception exc)
             {
@@ -178,6 +175,35 @@ namespace OPCServer
                 string Info;
                 Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
                 textBox2.AppendText(Info + exc.Message + "\r\n");
+            }
+            if (BaseIsOpen)
+            {
+                try
+                {
+                    //команда записи в таблицу измерений, работает, осталось под нее написать класс-конвертер или процедуру отдельную
+                    //string sql = "INSERT INTO devmdata VALUES(MESSNUMADDDAT.NEXTVAL, '6', '24-MAY-13 12:56:03 AM', '33')";
+
+                    // sql = "select d250adres from devmdata where messagenum > 5";
+                    // "select loc from dept" + " where deptno = 10"
+                    
+                    string sql;
+                    sql = "SELECT readtime, d250adres, val FROM devmdata WHERE readtime = '24.MAY.13'";
+                    OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
+                    cmd.CommandType = CommandType.Text;
+                    OracleDataReader dr = cmd.ExecuteReader();
+                    while (dr.Read())
+                    {
+                        for (int i = 0; i < dr.FieldCount; i++ )
+                            textBox2.AppendText(dr.GetValue(i).ToString() + " ");
+                        textBox2.AppendText("\r\n");
+                    }
+                }
+                catch (Exception exc)
+                {
+                    string Info;
+                    Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+                    textBox2.AppendText(Info + exc.Message + "\r\n");
+                }
             }
         }
 

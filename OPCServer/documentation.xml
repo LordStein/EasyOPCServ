@@ -194,6 +194,11 @@
             основной класс программы
             </summary>
         </member>
+        <member name="F:OPCServer.Form1.ConnectionString">
+            <summary>
+            Строка подключения к базе данных
+            </summary>
+        </member>
         <member name="M:OPCServer.Form1.#ctor">
             <summary>
             Инициализация формы приложения
@@ -256,11 +261,6 @@
             <summary>
             Обязательный метод для поддержки конструктора - не изменяйте
             содержимое данного метода при помощи редактора кода.
-            </summary>
-        </member>
-        <member name="M:OPCServer.Program.Main">
-            <summary>
-            Главная точка входа для приложения.
             </summary>
         </member>
         <member name="T:OPCServer.D250M">
@@ -346,6 +346,11 @@
         <member name="P:OPCServer.D250M.MonthofProdaction">
             <summary>
             Месяц изготовления прибора
+            </summary>
+        </member>
+        <member name="M:OPCServer.Program.Main">
+            <summary>
+            Главная точка входа для приложения.
             </summary>
         </member>
     </members>

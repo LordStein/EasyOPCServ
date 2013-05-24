@@ -87,6 +87,7 @@
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.textBox1);
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Сервер";
             this.Load += new System.EventHandler(this.Form1_Load);
