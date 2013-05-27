@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.Threading;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
+using System.IO;
 
 namespace OPCServer
 {
@@ -37,6 +38,19 @@ namespace OPCServer
 
         D250M testDev;
 
+        /// <summary>
+        /// Число опрашиваемых устройств
+        /// </summary>
+        int DevCount = 0;
+        /// <summary>
+        /// Массив адресов опрашиваемых устройств
+        /// </summary>
+        int[] DevMask = new int[16];
+
+        int nowReading = 0;
+
+        bool oprosstarted = false;
+
         OracleConnection OracleBaseCon;
         bool BaseIsOpen = false;
 
@@ -46,6 +60,28 @@ namespace OPCServer
         public Form1()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Загрузка формы, начальная инициализация
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //CPORT.Open();
+            testDev = new D250M(CPORT, 1);
+            if (testDev.iserror)
+            {
+                string Info;
+                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+                this.textBox2.AppendText(Info + testDev.errorcode + "\r\n");
+                button1.Enabled = false;
+            }
+            OracleBaseCon = new OracleConnection();
+            oprosstarted = false;
+            ReadMaskFromFile();
+            ReBindQue();
         }
 
         /// <summary>
@@ -70,7 +106,7 @@ namespace OPCServer
         }
 
         /// <summary>
-        /// Отдельный поток считыания информации
+        /// Отдельный поток считывания информации
         /// </summary>
         private void RefreshInfo()
         {
@@ -93,8 +129,28 @@ namespace OPCServer
             else Info += "20" + _year;
             Info += ", серийный номер: " + _serial + "\r\n";
             Info += "Последняя архивная запись: " + _testrecord.Hour + ":" + _testrecord.Minute;
-            Info += " измерено: " + _testrecord.Data;
+            Info += " измерено: " + _testrecord.Data + ReceiveDelay.Enabled.ToString() + "\r\n";
             addtext(Info);
+
+            // if (oprosstarted) this.ReceiveDelay.Enabled = true;
+        }
+
+        /// <summary>
+        /// Чтение данных в цикле - подготовка
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReadInCycle(object sender, EventArgs e)
+        {
+            ReceiveDelay.Enabled = false;
+            label1.Text = ReceiveDelay.Enabled.ToString();
+
+            testDev.Adres = (byte)DevMask[nowReading];
+            nowReading++;
+            if (nowReading > DevCount) nowReading = 0;
+
+            Thread t = new Thread(new ThreadStart(this.RefreshInfo));
+            t.Start();
         }
 
         /// <summary>
@@ -120,7 +176,8 @@ namespace OPCServer
             }
             else
             {
-                this.textBox1.Text = text;
+                this.textBox1.AppendText(text);
+                if (oprosstarted) this.ReceiveDelay.Enabled = true;
             }
         }
 
@@ -133,27 +190,9 @@ namespace OPCServer
             }
             else
             {
+                if (this.textBox2 != null)
                 this.textBox2.AppendText(text);
             }
-        }
-
-        /// <summary>
-        /// Загрузка формы, начальная инициализация
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            //CPORT.Open();
-            testDev = new D250M(CPORT, 1);
-            if (testDev.iserror)
-            {
-                string Info;
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                this.textBox2.AppendText(Info + testDev.errorcode + "\r\n");
-                button1.Enabled = false;
-            }
-            OracleBaseCon = new OracleConnection();
         }
 
         /// <summary>
@@ -208,7 +247,6 @@ namespace OPCServer
         }
 
 
-
         /// <summary>
         /// Закрытие программы
         /// </summary>
@@ -224,6 +262,109 @@ namespace OPCServer
         {
             ConnectToOrclBase();
         }
+
+        private void SaveMaskToFile()
+        {
+            BinaryWriter Mask;
+            /* *********************************
+             * запись маски устройств в файл
+             * записываются все устройства из 
+             * формы с адресами и факт их опроса
+             * ********************************** */
+            try
+            {
+                Mask = new BinaryWriter(new FileStream("settings.st", FileMode.Create));
+                foreach (D250Box Disk in panel1.Controls)
+                {
+                    Mask.Write(Disk.Adres);
+                    Mask.Write(Disk.isWork);
+                }
+                Mask.Close();
+            }
+            catch (IOException)
+            {
+                MessageBox.Show("Не возможно сохранить настройки", "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+        }
+
+        private void ReadMaskFromFile()
+        {
+            BinaryReader Mask;
+            /* *********************************
+             * запись маски устройств в файл
+             * записываются все устройства из 
+             * формы с адресами и факт их опроса
+             * ********************************** */
+            try
+            {
+                Mask = new BinaryReader(new FileStream("settings.st", FileMode.Open));
+                foreach (D250Box Disk in panel1.Controls)
+                {
+                    Disk.Adres = Mask.ReadInt32();
+                    Disk.isWork = Mask.ReadBoolean();
+                }
+                Mask.Close();
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Не возможно открыть настройки", "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+        }
+
+        /// <summary>
+        /// Изменение очереди устройств
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EditQueue(object sender, D250Box.DeventArgs e)
+        {
+            string Info;
+            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+
+            // Изменение для одного устройства
+            D250Box.DeventArgs oleg = (D250Box.DeventArgs)e;
+            if (oleg.isWork)
+                textBox2.AppendText(Info + "Устройство " + oleg.Adres + " включено в опрос." + "\r\n");
+            else
+                textBox2.AppendText(Info + "Устройство " + oleg.Adres + " отключено от опроса." + "\r\n");
+            ReBindQue();
+
+        }
+
+        private void ReBindQue()
+        {
+            DevCount = -1;
+            foreach (D250Box Disk in panel1.Controls)
+            {
+                if (Disk.isWork)
+                {
+                    DevCount++;
+                    DevMask[DevCount] = Disk.Adres;
+                }
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            oprosstarted = true;
+            ReceiveDelay.Enabled = true;            
+            button3.Enabled = false;
+            label1.Text = ReceiveDelay.Enabled.ToString();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            oprosstarted = false;
+            ReceiveDelay.Enabled = false;
+            button3.Enabled = true;
+            label1.Text = ReceiveDelay.Enabled.ToString();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            SaveMaskToFile();
+        }
+
 
     }
 }

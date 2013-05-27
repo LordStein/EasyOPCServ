@@ -109,6 +109,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="D250Box.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="D250Box.Designer.cs">
+      <DependentUpon>D250Box.cs</DependentUpon>
+    </Compile>
     <Compile Include="D250M.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -119,6 +125,9 @@
     <Compile Include="ModBusASCII.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="D250Box.resx">
+      <DependentUpon>D250Box.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

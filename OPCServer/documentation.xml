@@ -199,10 +199,27 @@
             Строка подключения к базе данных
             </summary>
         </member>
+        <member name="F:OPCServer.Form1.DevCount">
+            <summary>
+            Число опрашиваемых устройств
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.DevMask">
+            <summary>
+            Массив адресов опрашиваемых устройств
+            </summary>
+        </member>
         <member name="M:OPCServer.Form1.#ctor">
             <summary>
             Инициализация формы приложения
             </summary>
+        </member>
+        <member name="M:OPCServer.Form1.Form1_Load(System.Object,System.EventArgs)">
+            <summary>
+            Загрузка формы, начальная инициализация
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
         </member>
         <member name="M:OPCServer.Form1.button1_Click(System.Object,System.EventArgs)">
             <summary>
@@ -213,7 +230,7 @@
         </member>
         <member name="M:OPCServer.Form1.RefreshInfo">
             <summary>
-            Отдельный поток считыания информации
+            Отдельный поток считывания информации
             </summary>
         </member>
         <member name="M:OPCServer.Form1.ShowError">
@@ -227,13 +244,6 @@
             </summary>
             <param name="text"></param>
         </member>
-        <member name="M:OPCServer.Form1.Form1_Load(System.Object,System.EventArgs)">
-            <summary>
-            Загрузка формы, начальная инициализация
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
         <member name="M:OPCServer.Form1.ConnectToOrclBase">
             <summary>
             Попытка подключения к базе данных
@@ -242,6 +252,13 @@
         <member name="M:OPCServer.Form1.ProgramClosed(System.Object,System.Windows.Forms.FormClosedEventArgs)">
             <summary>
             Закрытие программы
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.EditQueue(System.Object,OPCServer.D250Box.DeventArgs)">
+            <summary>
+            Изменение очереди устройств
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -262,6 +279,89 @@
             Обязательный метод для поддержки конструктора - не изменяйте
             содержимое данного метода при помощи редактора кода.
             </summary>
+        </member>
+        <member name="T:OPCServer.D250Box">
+            <summary>
+            Отобажение ведомого устройства.
+            </summary>
+        </member>
+        <member name="M:OPCServer.D250Box.OnEnableChanged(System.Object,OPCServer.D250Box.DeventArgs)">
+            <summary>
+            Реакция на изменение состояния CheckBox.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.D250Box.#ctor">
+            <summary>
+            Конструткор класса по умолчанию
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250Box.components">
+            <summary> 
+            Требуется переменная конструктора.
+            </summary>
+        </member>
+        <member name="M:OPCServer.D250Box.Dispose(System.Boolean)">
+            <summary> 
+            Освободить все используемые ресурсы.
+            </summary>
+            <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
+        </member>
+        <member name="M:OPCServer.D250Box.InitializeComponent">
+            <summary> 
+            Обязательный метод для поддержки конструктора - не изменяйте 
+            содержимое данного метода при помощи редактора кода.
+            </summary>
+        </member>
+        <member name="E:OPCServer.D250Box.D250EnChanged">
+            <summary>
+            Происходит при нажатии на CheckBox компонента.
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250Box.Adres">
+            <summary>
+            Отображение и ввод адреса ведомого устройства.
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250Box.isWork">
+            <summary>
+            Показывает включено ли устройство в опрос.
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250Box.isError">
+            <summary>
+            Отображение статуса ведомого устройства.
+            </summary>
+        </member>
+        <member name="T:OPCServer.D250Box.DeventArgs">
+            <summary>
+            Список возвращаемых параметров
+            </summary>
+        </member>
+        <member name="M:OPCServer.D250Box.DeventArgs.#ctor(System.Int32,System.Boolean)">
+            <summary>
+            Конструктор класса
+            </summary>
+            <param name="adr"></param>
+            <param name="opros"></param>
+        </member>
+        <member name="P:OPCServer.D250Box.DeventArgs.Adres">
+            <summary>
+            Адрес
+            </summary>
+        </member>
+        <member name="P:OPCServer.D250Box.DeventArgs.isWork">
+            <summary>
+            Опрашивается ли
+            </summary>
+        </member>
+        <member name="T:OPCServer.D250Box.eHandler">
+            <summary>
+            Делегат исключения
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
         </member>
         <member name="T:OPCServer.D250M">
             <summary>
