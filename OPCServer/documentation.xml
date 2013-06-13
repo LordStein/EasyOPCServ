@@ -199,6 +199,16 @@
             Строка подключения к базе данных
             </summary>
         </member>
+        <member name="F:OPCServer.Form1.ReadRate">
+            <summary>
+            частота опроса в мс, желательно не меньше 100*Dnum
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.Dnum">
+            <summary>
+            Максимальное число устройств
+            </summary>
+        </member>
         <member name="F:OPCServer.Form1.DevCount">
             <summary>
             Число опрашиваемых устройств
@@ -207,6 +217,31 @@
         <member name="F:OPCServer.Form1.DevMask">
             <summary>
             Массив адресов опрашиваемых устройств
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.LastErr">
+            <summary>
+            Код последней ошибки устройства
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.nowReading">
+            <summary>
+            Номер текущего считываемого устройства
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.oprosstarted">
+            <summary>
+            Признак старта циклического опроса
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.OracleBaseCon">
+            <summary>
+            Соединение к БД
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.BaseIsOpen">
+            <summary>
+            Признак успешного открытия БД
             </summary>
         </member>
         <member name="M:OPCServer.Form1.#ctor">
@@ -221,21 +256,21 @@
             <param name="sender"></param>
             <param name="e"></param>
         </member>
-        <member name="M:OPCServer.Form1.button1_Click(System.Object,System.EventArgs)">
+        <member name="M:OPCServer.Form1.ReadDataOnce(System.Object,System.EventArgs)">
             <summary>
             На каждое считывание создается отдельный поток
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
         </member>
+        <member name="M:OPCServer.Form1.ReadOnce">
+            <summary>
+            Считать данные один раз
+            </summary>
+        </member>
         <member name="M:OPCServer.Form1.RefreshInfo">
             <summary>
             Отдельный поток считывания информации
-            </summary>
-        </member>
-        <member name="M:OPCServer.Form1.ShowError">
-            <summary>
-            Вывести ошибку в лог
             </summary>
         </member>
         <member name="M:OPCServer.Form1.addtext(System.String)">
@@ -244,14 +279,40 @@
             </summary>
             <param name="text"></param>
         </member>
+        <member name="M:OPCServer.Form1.ReadInCycle(System.Object,System.EventArgs)">
+            <summary>
+            Чтение данных в цикле - подготовка
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.ShowError">
+            <summary>
+            Вывести ошибку в лог
+            </summary>
+        </member>
         <member name="M:OPCServer.Form1.ConnectToOrclBase">
             <summary>
             Попытка подключения к базе данных
             </summary>
         </member>
+        <member name="M:OPCServer.Form1.ManualSaveToBase(System.Object,System.EventArgs)">
+            <summary>
+            Ручная запись в файл - тест
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
         <member name="M:OPCServer.Form1.ProgramClosed(System.Object,System.Windows.Forms.FormClosedEventArgs)">
             <summary>
             Закрытие программы
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.ConnecttoBaseClick(System.Object,System.EventArgs)">
+            <summary>
+            Ручное соединение к базе - тест
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -262,6 +323,11 @@
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.SaveErrortoBase">
+            <summary>
+            Сохранение ошибок работы в базу данных
+            </summary>
         </member>
         <member name="F:OPCServer.Form1.components">
             <summary>
@@ -296,6 +362,16 @@
             <summary>
             Конструткор класса по умолчанию
             </summary>
+        </member>
+        <member name="M:OPCServer.D250Box.#ctor(System.Int32,System.Boolean,System.Boolean,System.Int32,System.Int32)">
+            <summary>
+            Конструктор с параметрами
+            </summary>
+            <param name="adres"></param>
+            <param name="iserror"></param>
+            <param name="iswork"></param>
+            <param name="x"></param>
+            <param name="y"></param>
         </member>
         <member name="F:OPCServer.D250Box.components">
             <summary> 
@@ -378,6 +454,11 @@
             Таймер сброса задержки чтения
             </summary>
         </member>
+        <member name="F:OPCServer.D250M.Error">
+            <summary>
+            Ошибки
+            </summary>
+        </member>
         <member name="F:OPCServer.D250M.Device">
             <summary>
             Порт связи
@@ -408,15 +489,11 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="P:OPCServer.D250M.iserror">
+        <member name="M:OPCServer.D250M.IsOnLine">
             <summary>
-            Признак ошибки последней операции
+            Проверка связи с прибором
             </summary>
-        </member>
-        <member name="P:OPCServer.D250M.errorcode">
-            <summary>
-            Код ошибки последней операции
-            </summary>
+            <returns> Возвращает признак наличия связи</returns>
         </member>
         <member name="P:OPCServer.D250M.Adres">
             <summary>
@@ -446,6 +523,21 @@
         <member name="P:OPCServer.D250M.MonthofProdaction">
             <summary>
             Месяц изготовления прибора
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.D250Error.isError">
+            <summary>
+             Признак ошибки прошлой операции
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.D250Error.ErrorCode">
+            <summary>
+            Код ошибки
+            </summary>
+        </member>
+        <member name="F:OPCServer.D250M.D250Error.Message">
+            <summary>
+            Текст ошибки
             </summary>
         </member>
         <member name="M:OPCServer.Program.Main">

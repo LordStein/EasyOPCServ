@@ -31,14 +31,16 @@
             this.components = new System.ComponentModel.Container();
             this.CPORT = new System.IO.Ports.SerialPort(this.components);
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.butReadOnce = new System.Windows.Forms.Button();
             this.ReceiveDelay = new System.Windows.Forms.Timer(this.components);
             this.textBox2 = new System.Windows.Forms.TextBox();
-            this.button2 = new System.Windows.Forms.Button();
+            this.butConnectDB = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button5 = new System.Windows.Forms.Button();
+            this.butStartCicleRead = new System.Windows.Forms.Button();
+            this.butStopCicleRead = new System.Windows.Forms.Button();
+            this.butSaveSettings = new System.Windows.Forms.Button();
+            this.butWriteToBase = new System.Windows.Forms.Button();
+            this.butDisconnectDB = new System.Windows.Forms.Button();
             this.d250Box16 = new OPCServer.D250Box();
             this.d250Box15 = new OPCServer.D250Box();
             this.d250Box14 = new OPCServer.D250Box();
@@ -55,7 +57,6 @@
             this.d250Box3 = new OPCServer.D250Box();
             this.d250Box2 = new OPCServer.D250Box();
             this.d250Box1 = new OPCServer.D250Box();
-            this.label1 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -72,18 +73,19 @@
             this.textBox1.Size = new System.Drawing.Size(372, 46);
             this.textBox1.TabIndex = 0;
             // 
-            // button1
+            // butReadOnce
             // 
-            this.button1.Location = new System.Drawing.Point(12, 74);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(98, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Прочитать";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.butReadOnce.Location = new System.Drawing.Point(12, 74);
+            this.butReadOnce.Name = "butReadOnce";
+            this.butReadOnce.Size = new System.Drawing.Size(73, 23);
+            this.butReadOnce.TabIndex = 1;
+            this.butReadOnce.Text = "Прочитать";
+            this.butReadOnce.UseVisualStyleBackColor = true;
+            this.butReadOnce.Click += new System.EventHandler(this.ReadDataOnce);
             // 
             // ReceiveDelay
             // 
+            this.ReceiveDelay.Interval = 5000;
             this.ReceiveDelay.Tick += new System.EventHandler(this.ReadInCycle);
             // 
             // textBox2
@@ -95,15 +97,15 @@
             this.textBox2.Size = new System.Drawing.Size(372, 113);
             this.textBox2.TabIndex = 2;
             // 
-            // button2
+            // butConnectDB
             // 
-            this.button2.Location = new System.Drawing.Point(118, 74);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(98, 23);
-            this.button2.TabIndex = 3;
-            this.button2.Text = "Подключить БД";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.connclick);
+            this.butConnectDB.Location = new System.Drawing.Point(91, 74);
+            this.butConnectDB.Name = "butConnectDB";
+            this.butConnectDB.Size = new System.Drawing.Size(96, 23);
+            this.butConnectDB.TabIndex = 3;
+            this.butConnectDB.Text = "Подключить БД";
+            this.butConnectDB.UseVisualStyleBackColor = true;
+            this.butConnectDB.Click += new System.EventHandler(this.ConnecttoBaseClick);
             // 
             // panel1
             // 
@@ -125,40 +127,63 @@
             this.panel1.Controls.Add(this.d250Box3);
             this.panel1.Controls.Add(this.d250Box2);
             this.panel1.Controls.Add(this.d250Box1);
-            this.panel1.Location = new System.Drawing.Point(443, 6);
+            this.panel1.Location = new System.Drawing.Point(404, 6);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(215, 271);
             this.panel1.TabIndex = 5;
             // 
-            // button3
+            // butStartCicleRead
             // 
-            this.button3.Location = new System.Drawing.Point(12, 245);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(98, 23);
-            this.button3.TabIndex = 6;
-            this.button3.Text = "Старт опрос";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.butStartCicleRead.Location = new System.Drawing.Point(12, 245);
+            this.butStartCicleRead.Name = "butStartCicleRead";
+            this.butStartCicleRead.Size = new System.Drawing.Size(98, 23);
+            this.butStartCicleRead.TabIndex = 6;
+            this.butStartCicleRead.Text = "Старт опрос";
+            this.butStartCicleRead.UseVisualStyleBackColor = true;
+            this.butStartCicleRead.Click += new System.EventHandler(this.StartCicleRead);
             // 
-            // button4
+            // butStopCicleRead
             // 
-            this.button4.Location = new System.Drawing.Point(118, 245);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(98, 23);
-            this.button4.TabIndex = 7;
-            this.button4.Text = "Стоп опрос";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
+            this.butStopCicleRead.Location = new System.Drawing.Point(116, 245);
+            this.butStopCicleRead.Name = "butStopCicleRead";
+            this.butStopCicleRead.Size = new System.Drawing.Size(98, 23);
+            this.butStopCicleRead.TabIndex = 7;
+            this.butStopCicleRead.Text = "Стоп опрос";
+            this.butStopCicleRead.UseVisualStyleBackColor = true;
+            this.butStopCicleRead.Click += new System.EventHandler(this.StopCicleRead);
             // 
-            // button5
+            // butSaveSettings
             // 
-            this.button5.Location = new System.Drawing.Point(443, 283);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(75, 23);
-            this.button5.TabIndex = 8;
-            this.button5.Text = "Сохранить";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
+            this.butSaveSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.butSaveSettings.Location = new System.Drawing.Point(404, 283);
+            this.butSaveSettings.Name = "butSaveSettings";
+            this.butSaveSettings.Size = new System.Drawing.Size(75, 23);
+            this.butSaveSettings.TabIndex = 8;
+            this.butSaveSettings.Text = "Сохранить";
+            this.butSaveSettings.UseVisualStyleBackColor = true;
+            this.butSaveSettings.Click += new System.EventHandler(this.SaveSettings);
+            // 
+            // butWriteToBase
+            // 
+            this.butWriteToBase.Enabled = false;
+            this.butWriteToBase.Location = new System.Drawing.Point(193, 74);
+            this.butWriteToBase.Name = "butWriteToBase";
+            this.butWriteToBase.Size = new System.Drawing.Size(96, 23);
+            this.butWriteToBase.TabIndex = 9;
+            this.butWriteToBase.Text = "Записать в БД";
+            this.butWriteToBase.UseVisualStyleBackColor = true;
+            this.butWriteToBase.Click += new System.EventHandler(this.ManualSaveToBase);
+            // 
+            // butDisconnectDB
+            // 
+            this.butDisconnectDB.Enabled = false;
+            this.butDisconnectDB.Location = new System.Drawing.Point(295, 74);
+            this.butDisconnectDB.Name = "butDisconnectDB";
+            this.butDisconnectDB.Size = new System.Drawing.Size(89, 23);
+            this.butDisconnectDB.TabIndex = 10;
+            this.butDisconnectDB.Text = "Отключить БД";
+            this.butDisconnectDB.UseVisualStyleBackColor = true;
+            this.butDisconnectDB.Click += new System.EventHandler(this.DisconnectFromDB);
             // 
             // d250Box16
             // 
@@ -170,7 +195,6 @@
             this.d250Box16.Name = "d250Box16";
             this.d250Box16.Size = new System.Drawing.Size(99, 27);
             this.d250Box16.TabIndex = 15;
-            this.d250Box16.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box15
             // 
@@ -182,7 +206,6 @@
             this.d250Box15.Name = "d250Box15";
             this.d250Box15.Size = new System.Drawing.Size(99, 27);
             this.d250Box15.TabIndex = 14;
-            this.d250Box15.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box14
             // 
@@ -194,7 +217,6 @@
             this.d250Box14.Name = "d250Box14";
             this.d250Box14.Size = new System.Drawing.Size(99, 27);
             this.d250Box14.TabIndex = 13;
-            this.d250Box14.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box13
             // 
@@ -206,7 +228,6 @@
             this.d250Box13.Name = "d250Box13";
             this.d250Box13.Size = new System.Drawing.Size(99, 27);
             this.d250Box13.TabIndex = 12;
-            this.d250Box13.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box12
             // 
@@ -218,7 +239,6 @@
             this.d250Box12.Name = "d250Box12";
             this.d250Box12.Size = new System.Drawing.Size(99, 27);
             this.d250Box12.TabIndex = 11;
-            this.d250Box12.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box11
             // 
@@ -230,7 +250,6 @@
             this.d250Box11.Name = "d250Box11";
             this.d250Box11.Size = new System.Drawing.Size(99, 27);
             this.d250Box11.TabIndex = 10;
-            this.d250Box11.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box10
             // 
@@ -242,7 +261,6 @@
             this.d250Box10.Name = "d250Box10";
             this.d250Box10.Size = new System.Drawing.Size(99, 27);
             this.d250Box10.TabIndex = 9;
-            this.d250Box10.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box9
             // 
@@ -254,7 +272,6 @@
             this.d250Box9.Name = "d250Box9";
             this.d250Box9.Size = new System.Drawing.Size(99, 27);
             this.d250Box9.TabIndex = 8;
-            this.d250Box9.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box8
             // 
@@ -266,7 +283,6 @@
             this.d250Box8.Name = "d250Box8";
             this.d250Box8.Size = new System.Drawing.Size(99, 27);
             this.d250Box8.TabIndex = 7;
-            this.d250Box8.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box7
             // 
@@ -278,7 +294,6 @@
             this.d250Box7.Name = "d250Box7";
             this.d250Box7.Size = new System.Drawing.Size(99, 27);
             this.d250Box7.TabIndex = 6;
-            this.d250Box7.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box6
             // 
@@ -290,7 +305,6 @@
             this.d250Box6.Name = "d250Box6";
             this.d250Box6.Size = new System.Drawing.Size(99, 27);
             this.d250Box6.TabIndex = 5;
-            this.d250Box6.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box5
             // 
@@ -302,7 +316,6 @@
             this.d250Box5.Name = "d250Box5";
             this.d250Box5.Size = new System.Drawing.Size(99, 27);
             this.d250Box5.TabIndex = 4;
-            this.d250Box5.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box4
             // 
@@ -314,7 +327,6 @@
             this.d250Box4.Name = "d250Box4";
             this.d250Box4.Size = new System.Drawing.Size(99, 27);
             this.d250Box4.TabIndex = 3;
-            this.d250Box4.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box3
             // 
@@ -326,7 +338,6 @@
             this.d250Box3.Name = "d250Box3";
             this.d250Box3.Size = new System.Drawing.Size(99, 27);
             this.d250Box3.TabIndex = 2;
-            this.d250Box3.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box2
             // 
@@ -338,7 +349,6 @@
             this.d250Box2.Name = "d250Box2";
             this.d250Box2.Size = new System.Drawing.Size(99, 27);
             this.d250Box2.TabIndex = 1;
-            this.d250Box2.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
             // 
             // d250Box1
             // 
@@ -350,36 +360,28 @@
             this.d250Box1.Name = "d250Box1";
             this.d250Box1.Size = new System.Drawing.Size(99, 27);
             this.d250Box1.TabIndex = 0;
-            this.d250Box1.D250EnChanged += new OPCServer.D250Box.eHandler(this.EditQueue);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 288);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 9;
-            this.label1.Text = "label1";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(661, 314);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.button5);
-            this.Controls.Add(this.button4);
-            this.Controls.Add(this.button3);
+            this.ClientSize = new System.Drawing.Size(622, 314);
+            this.Controls.Add(this.butSaveSettings);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.butConnectDB);
             this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.butReadOnce);
             this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.butDisconnectDB);
+            this.Controls.Add(this.butWriteToBase);
+            this.Controls.Add(this.butStopCicleRead);
+            this.Controls.Add(this.butStartCicleRead);
             this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(900, 352);
+            this.MinimumSize = new System.Drawing.Size(242, 352);
             this.Name = "Form1";
             this.Text = "Сервер";
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ProgramClosed);
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -390,10 +392,10 @@
 
         private System.IO.Ports.SerialPort CPORT;
         private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button butReadOnce;
         private System.Windows.Forms.Timer ReceiveDelay;
         private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button butConnectDB;
         private System.Windows.Forms.Panel panel1;
         private D250Box d250Box16;
         private D250Box d250Box15;
@@ -411,10 +413,11 @@
         private D250Box d250Box3;
         private D250Box d250Box2;
         private D250Box d250Box1;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button butStartCicleRead;
+        private System.Windows.Forms.Button butStopCicleRead;
+        private System.Windows.Forms.Button butSaveSettings;
+        private System.Windows.Forms.Button butWriteToBase;
+        private System.Windows.Forms.Button butDisconnectDB;
     }
 }
 

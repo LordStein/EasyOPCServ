@@ -34,26 +34,59 @@ namespace OPCServer
         /// <summary>
         /// Строка подключения к базе данных
         /// </summary>
-        const string ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = microsof-eed687)(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=ST;Password=1234";
+        const string ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = comp)(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=ST;Password=1234";
+
+        /// <summary>
+        /// частота опроса в мс, желательно не меньше 100*Dnum
+        /// </summary>
+        const int ReadRate = 5000;
+
+        /// <summary>
+        /// Максимальное число устройств
+        /// </summary>
+        const int Dnum = 16;
 
         D250M testDev;
+
+        float data = 0;
 
         /// <summary>
         /// Число опрашиваемых устройств
         /// </summary>
         int DevCount = 0;
+
         /// <summary>
         /// Массив адресов опрашиваемых устройств
         /// </summary>
-        int[] DevMask = new int[16];
+        int[] DevMask = new int[Dnum];
 
+        /// <summary>
+        /// Код последней ошибки устройства
+        /// </summary>
+        int[] LastErr = new int[Dnum];
+
+        /// <summary>
+        /// Номер текущего считываемого устройства
+        /// </summary>
         int nowReading = 0;
 
+        /// <summary>
+        /// Признак старта циклического опроса
+        /// </summary>
         bool oprosstarted = false;
 
+        /// <summary>
+        /// Соединение к БД
+        /// </summary>
         OracleConnection OracleBaseCon;
+        
+        /// <summary>
+        /// Признак успешного открытия БД
+        /// </summary>
         bool BaseIsOpen = false;
 
+
+        #region Методы
         /// <summary>
         /// Инициализация формы приложения
         /// </summary>
@@ -70,18 +103,23 @@ namespace OPCServer
         private void Form1_Load(object sender, EventArgs e)
         {
             //CPORT.Open();
+            OracleBaseCon = new OracleConnection();
+            ConnectToOrclBase();
             testDev = new D250M(CPORT, 1);
-            if (testDev.iserror)
+            if (testDev.Error.isError)
             {
                 string Info;
                 Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                this.textBox2.AppendText(Info + testDev.errorcode + "\r\n");
-                button1.Enabled = false;
+                this.textBox2.AppendText(Info + testDev.Error.Message + "\r\n");
+                butReadOnce.Enabled = false;
+                butStartCicleRead.Enabled = false;
+                SaveErrortoBase();
             }
-            OracleBaseCon = new OracleConnection();
             oprosstarted = false;
             ReadMaskFromFile();
             ReBindQue();
+            butStartCicleRead.Enabled = true;
+            butStopCicleRead.Enabled = false;
         }
 
         /// <summary>
@@ -89,7 +127,7 @@ namespace OPCServer
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void button1_Click(object sender, EventArgs e)
+        private void ReadDataOnce(object sender, EventArgs e)
         {
             //ModBusASCII test = new ModBusASCII(CPORT);
             //byte[] oleg = new byte[] {0x3A, 0x1, 0x4, 0x4, 0x0, 0x0, 0x48, 0xC1 ,0xD, 0xA };
@@ -101,8 +139,40 @@ namespace OPCServer
                 textBox1.AppendText(sim + " ");
             }*/
             //textBox1.Text = test.BintoFloat(oleg, 4).ToString();
-            Thread t = new Thread(new ThreadStart(this.RefreshInfo));
+            Thread t = new Thread(new ThreadStart(this.ReadOnce));
             t.Start();
+        }
+
+        /// <summary>
+        /// Считать данные один раз
+        /// </summary>
+        private void ReadOnce()
+        {
+            string Info;
+
+            int _month = testDev.MonthofProdaction;
+            if (testDev.Error.isError) ShowError();
+
+            int _year = testDev.YearofProduction;
+            if (testDev.Error.isError) ShowError();
+
+            int _serial = testDev.SerialNumber;
+            if (testDev.Error.isError) ShowError();
+
+            //D250M.ArchRecord _testrecord = new D250M.ArchRecord();
+            //if (!testDev.GetLastArchRecord(ref _testrecord)) ShowError();
+
+            float datanow = testDev.DataNow;
+            if (testDev.Error.isError) ShowError();
+
+            Info = "Прибор произведен: " + _month + ".";
+            if (_year < 10) Info += "200" + _year;
+            else Info += "20" + _year;
+            Info += ", серийный номер: " + _serial + "\r\n";
+            //Info += "Последняя архивная запись: " + _testrecord.Hour + ":" + _testrecord.Minute;
+            Info += " измерено: " + datanow + "\r\n";
+
+            addtext(Info);
         }
 
         /// <summary>
@@ -110,57 +180,8 @@ namespace OPCServer
         /// </summary>
         private void RefreshInfo()
         {
-            string Info;
-
-            int _month = testDev.MonthofProdaction;
-            if (testDev.iserror) ShowError();
-
-            int _year = testDev.YearofProduction;
-            if (testDev.iserror) ShowError();
-
-            int _serial = testDev.SerialNumber;
-            if (testDev.iserror) ShowError();
-
-            D250M.ArchRecord _testrecord = new D250M.ArchRecord();
-            if (!testDev.GetLastArchRecord(ref _testrecord)) ShowError();
-
-            Info = "Прибор произведен: " + _month + ".";
-            if (_year < 10) Info += "200" + _year;
-            else Info += "20" + _year;
-            Info += ", серийный номер: " + _serial + "\r\n";
-            Info += "Последняя архивная запись: " + _testrecord.Hour + ":" + _testrecord.Minute;
-            Info += " измерено: " + _testrecord.Data + ReceiveDelay.Enabled.ToString() + "\r\n";
-            addtext(Info);
-
-            // if (oprosstarted) this.ReceiveDelay.Enabled = true;
-        }
-
-        /// <summary>
-        /// Чтение данных в цикле - подготовка
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ReadInCycle(object sender, EventArgs e)
-        {
-            ReceiveDelay.Enabled = false;
-            label1.Text = ReceiveDelay.Enabled.ToString();
-
-            testDev.Adres = (byte)DevMask[nowReading];
-            nowReading++;
-            if (nowReading > DevCount) nowReading = 0;
-
-            Thread t = new Thread(new ThreadStart(this.RefreshInfo));
-            t.Start();
-        }
-
-        /// <summary>
-        /// Вывести ошибку в лог
-        /// </summary>
-        private void ShowError()
-        {
-            string Info;
-            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-            adderrortext(Info + testDev.errorcode + "\r\n");
+            data = testDev.DataNow;
+            addtext("");
         }
 
         /// <summary>
@@ -191,8 +212,75 @@ namespace OPCServer
             else
             {
                 if (this.textBox2 != null)
-                this.textBox2.AppendText(text);
+                    this.textBox2.AppendText(text);
             }
+        }
+
+        /// <summary>
+        /// Чтение данных в цикле - подготовка
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReadInCycle(object sender, EventArgs e)
+        {
+            if (oprosstarted)
+            {
+                if (!testDev.Error.isError)
+                {
+                    SaveDattoBase(data);
+                    foreach (D250Box Disk in panel1.Controls)
+                    {
+                        if ((Disk.isWork) && (Disk.Adres == testDev.Adres))
+                        {
+                            Disk.isError = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // проверим что данная ошибка происходит впервые
+                    // для избежания множественной записи ошибки в базу
+                    if (LastErr[nowReading] != testDev.Error.ErrorCode)
+                    {
+                        LastErr[nowReading] = testDev.Error.ErrorCode;
+                        //запись ошибки в базу
+                        SaveErrortoBase();
+                        ShowError();
+                        foreach (D250Box Disk in panel1.Controls)
+                        {
+                            if ((Disk.isWork) && (Disk.Adres == testDev.Adres))
+                            {
+                                Disk.isError = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            ReceiveDelay.Enabled = false;
+
+            testDev.Adres = (byte)DevMask[nowReading];
+            nowReading++;
+            if (nowReading > DevCount) nowReading = 0;
+
+            if (!oprosstarted)
+            {
+                oprosstarted = true;
+            }
+
+            Thread t = new Thread(new ThreadStart(this.RefreshInfo));
+            t.Start();
+        }
+
+        /// <summary>
+        /// Вывести ошибку в лог
+        /// </summary>
+        private void ShowError()
+        {
+            string Info;
+            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+            adderrortext(Info + testDev.Error.Message + "\r\n");
         }
 
         /// <summary>
@@ -205,28 +293,36 @@ namespace OPCServer
                 OracleBaseCon.ConnectionString = ConnectionString;
                 OracleBaseCon.Open();
                 BaseIsOpen = true;
-                button2.Enabled = false;
+                butConnectDB.Enabled = false;
+                butDisconnectDB.Enabled = true;
             }
             catch (Exception exc)
             {
-                button2.Enabled = true;
+                butConnectDB.Enabled = true;
                 BaseIsOpen = false;
                 string Info;
                 Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
                 textBox2.AppendText(Info + exc.Message + "\r\n");
             }
+
+            // Тестовое чтение параметров из БД
+
+            /*
             if (BaseIsOpen)
             {
+                butWriteToBase.Enabled = true;
+                butStartCicleRead.Enabled = true;
                 try
                 {
                     //команда записи в таблицу измерений, работает, осталось под нее написать класс-конвертер или процедуру отдельную
                     //string sql = "INSERT INTO devmdata VALUES(MESSNUMADDDAT.NEXTVAL, '6', '24-MAY-13 12:56:03 AM', '33')";
 
                     // sql = "select d250adres from devmdata where messagenum > 5";
+                    // sql = "SELECT * FROM d250data WHERE data > 10";
                     // "select loc from dept" + " where deptno = 10"
                     
                     string sql;
-                    sql = "SELECT readtime, d250adres, val FROM devmdata WHERE readtime = '24.MAY.13'";
+                    sql = "SELECT * FROM d250data WHERE readtime > '24-May-13'";
                     OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
                     cmd.CommandType = CommandType.Text;
                     OracleDataReader dr = cmd.ExecuteReader();
@@ -244,8 +340,100 @@ namespace OPCServer
                     textBox2.AppendText(Info + exc.Message + "\r\n");
                 }
             }
+             */
         }
 
+        private void SaveDattoBase(float dat)
+        {
+            string sql = "insert into d250data values(messnumadddat.nextval, '";
+            sql += testDev.Adres + "', '";
+            sql += DateTime.Now.Day + "-";
+            string month = "";
+            switch (DateTime.Now.Month)
+            {
+                case 1:
+                    month = "jan";
+                    break;
+                case 2:
+                    month = "feb";
+                    break;
+                case 3:
+                    month = "mar";
+                    break;
+                case 4:
+                    month = "apr";
+                    break;
+                case 5:
+                    month = "may";
+                    break;
+                case 6:
+                    month = "jun";
+                    break;
+                case 7:
+                    month = "jul";
+                    break;
+                case 8:
+                    month = "aug";
+                    break;
+                case 9:
+                    month = "sep";
+                    break;
+                case 10:
+                    month = "oct";
+                    break;
+                case 11:
+                    month = "nov";
+                    break;
+                case 12:
+                    month = "dec";
+                    break;
+            }
+            sql += month + "-" + (DateTime.Now.Year - 2000).ToString() + " ";
+            int hour = DateTime.Now.Hour;
+
+            if ((hour > 12)&(hour <= 23))
+            {
+                sql += (hour - 12).ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " PM";
+            }
+            else if (hour == 12)
+            {
+                sql += hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " PM";
+            }
+            else if (hour == 0)
+            {
+                sql += "12:" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " AM";
+            }
+            else sql += hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " AM";
+            sql += "', '" + dat.ToString(System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")) + "')";
+
+            if (BaseIsOpen)
+            {
+                try
+                {
+                    OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
+                    cmd.CommandType = CommandType.Text;
+                    OracleDataReader dr = cmd.ExecuteReader();
+                    dr.Read();
+                }
+                catch (Exception exc)
+                {
+                    string Info;
+                    Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+                    textBox2.AppendText(Info + exc.Message + "\r\n");
+                }
+            }
+            //textBox2.AppendText(sql);
+        }
+
+        /// <summary>
+        /// Ручная запись в файл - тест
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ManualSaveToBase(object sender, EventArgs e)
+        {
+            SaveDattoBase((float)Math.PI*DateTime.Now.Second/3);
+        }
 
         /// <summary>
         /// Закрытие программы
@@ -258,7 +446,12 @@ namespace OPCServer
             if (BaseIsOpen) OracleBaseCon.Close();            
         }
 
-        private void connclick(object sender, EventArgs e)
+        /// <summary>
+        /// Ручное соединение к базе - тест
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ConnecttoBaseClick(object sender, EventArgs e)
         {
             ConnectToOrclBase();
         }
@@ -342,29 +535,132 @@ namespace OPCServer
                     DevMask[DevCount] = Disk.Adres;
                 }
             }
+
+            // время задержки опроса зависит от числа устройств
+            // в итоге каждое устройство опрашивается 1 раз в 5 секунд
+            ReceiveDelay.Interval = ReadRate / (DevCount + 1);
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void StartCicleRead(object sender, EventArgs e)
         {
-            oprosstarted = true;
+            
             ReceiveDelay.Enabled = true;            
-            button3.Enabled = false;
-            label1.Text = ReceiveDelay.Enabled.ToString();
+            butStartCicleRead.Enabled = false;
+            butStopCicleRead.Enabled = true;
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void StopCicleRead(object sender, EventArgs e)
         {
             oprosstarted = false;
             ReceiveDelay.Enabled = false;
-            button3.Enabled = true;
-            label1.Text = ReceiveDelay.Enabled.ToString();
+            butStartCicleRead.Enabled = true;
+            butStopCicleRead.Enabled = false;
         }
 
-        private void button5_Click(object sender, EventArgs e)
+        private void SaveSettings(object sender, EventArgs e)
         {
             SaveMaskToFile();
         }
+        
 
+        private void DisconnectFromDB(object sender, EventArgs e)
+        {
+            if (BaseIsOpen)
+            {
+                OracleBaseCon.Close();
+                BaseIsOpen = false;
+                butConnectDB.Enabled = true;
+                butWriteToBase.Enabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Сохранение ошибок работы в базу данных
+        /// </summary>
+        private void SaveErrortoBase()
+        {
+            string sql = "insert into d250error values(messnumadder.nextval, '";
+            sql += testDev.Adres + "', '";
+            sql += DateTime.Now.Day + "-";
+            string month = "";
+            switch (DateTime.Now.Month)
+            {
+                case 1:
+                    month = "jan";
+                    break;
+                case 2:
+                    month = "feb";
+                    break;
+                case 3:
+                    month = "mar";
+                    break;
+                case 4:
+                    month = "apr";
+                    break;
+                case 5:
+                    month = "may";
+                    break;
+                case 6:
+                    month = "jun";
+                    break;
+                case 7:
+                    month = "jul";
+                    break;
+                case 8:
+                    month = "aug";
+                    break;
+                case 9:
+                    month = "sep";
+                    break;
+                case 10:
+                    month = "oct";
+                    break;
+                case 11:
+                    month = "nov";
+                    break;
+                case 12:
+                    month = "dec";
+                    break;
+            }
+            sql += month + "-" + (DateTime.Now.Year - 2000).ToString() + " ";
+            int hour = DateTime.Now.Hour;
+
+            if ((hour > 12) & (hour <= 23))
+            {
+                sql += (hour - 12).ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " PM";
+            }
+            else if (hour == 12)
+            {
+                sql += hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " PM";
+            }
+            else if (hour == 0)
+            {
+                sql += "12:" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " AM";
+            }
+            else sql += hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " AM";
+            sql += "', '" + testDev.Error.ErrorCode.ToString();
+            sql += "', '" + testDev.Error.Message.Replace("'","") + "')";
+
+            if (BaseIsOpen)
+            {
+                try
+                {
+                    OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
+                    cmd.CommandType = CommandType.Text;
+                    OracleDataReader dr = cmd.ExecuteReader();
+                    dr.Read();
+                }
+                catch (Exception exc)
+                {
+                    string Info;
+                    Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+                    textBox2.AppendText(Info + exc.Message + "\r\n");
+                }
+            }
+        }
+
+
+        #endregion
 
     }
 }

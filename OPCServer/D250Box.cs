@@ -174,6 +174,14 @@ namespace OPCServer
             checkBox1.CheckedChanged += new EventHandler(checkBox1_CheckedChanged);
         }
 
+        /// <summary>
+        /// Конструктор с параметрами
+        /// </summary>
+        /// <param name="adres"></param>
+        /// <param name="iserror"></param>
+        /// <param name="iswork"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         public D250Box(int adres, bool iserror, bool iswork, int x, int y)
         {
             InitializeComponent();

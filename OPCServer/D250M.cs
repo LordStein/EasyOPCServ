@@ -24,6 +24,24 @@ namespace OPCServer
             public byte Rele;
         }
 
+        public struct D250Error
+        {
+            /// <summary>
+            ///  Признак ошибки прошлой операции
+            /// </summary>
+            public bool isError;
+
+            /// <summary>
+            /// Код ошибки
+            /// </summary>
+            public int ErrorCode;
+
+            /// <summary>
+            /// Текст ошибки
+            /// </summary>
+            public string Message;
+        }
+
         #region Константы
         /// <summary>
         /// Величина задержки приема
@@ -51,13 +69,9 @@ namespace OPCServer
         System.Timers.Timer Delayer;
 
         /// <summary>
-        /// Признак ошибки последней операции
+        /// Ошибки
         /// </summary>
-        public bool iserror { private set; get; }
-        /// <summary>
-        /// Код ошибки последней операции
-        /// </summary>
-        public string errorcode { private set; get; }
+        public D250Error Error;
 
         /// <summary>
         /// Порт связи
@@ -98,11 +112,12 @@ namespace OPCServer
         {
             get
             {
-                iserror = false;
+                Error.isError = false;
                 if (Device.SendCom(this.Adres, aSerialNumber, 1, ModBusASCII.RDSettReg) == 1)
                 {
-                    iserror = true;
-                    errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
+                    Error.isError = true;
+                    Error.ErrorCode = 250;
+                    Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не отправлен.";
                     return 0;
                 }
                 else
@@ -115,7 +130,6 @@ namespace OPCServer
                     int kod = Device.ReadData();
                     if (kod != 0)
                     {
-                        iserror = true;
                         SetErrStr(kod);
                         return 0;
                     }
@@ -132,11 +146,12 @@ namespace OPCServer
         {
             get
             {
-                iserror = false;
+                Error.isError = false;
                 if (Device.SendCom(this.Adres, aDataNow, 2, ModBusASCII.RDDatReg) == 1)
                 {
-                    iserror = true;
-                    errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
+                    Error.isError = true;
+                    Error.ErrorCode = 250;
+                    Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не отправлен.";
                     return 0;
                 }
                 else
@@ -149,7 +164,6 @@ namespace OPCServer
                     int kod = Device.ReadData();
                     if (kod != 0)
                     {
-                        iserror = true;
                         SetErrStr(kod);
                         return 0;
                     }
@@ -165,12 +179,13 @@ namespace OPCServer
         {
             get
             {
-                iserror = false;
+                Error.isError = false;
                 if (Device.SendCom(this.Adres, aErrorReg, 1, ModBusASCII.RDDatReg) == 1)
                 {
-                    iserror = true;
-                    errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
-                    return errorcode;
+                    Error.isError = true;
+                    Error.ErrorCode = 250;
+                    Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не отправлен.";
+                    return Error.Message;
                 }
                 else
                 {
@@ -182,12 +197,12 @@ namespace OPCServer
                     int kod = Device.ReadData();
                     if (kod != 0)
                     {
-                        iserror = true;
                         SetErrStr(kod);
-                        return errorcode;
+                        return Error.Message;
                     }
                     else
                     {
+                        string errorcode = "";
                         byte error = Device.BintoByte(Device.EnteredData, 4);
                         if ((error & 1) == 1) errorcode += "Ошибка АЦП ";
                         if ((error & 2) == 2) errorcode += "Ошибка записи/чтения EPROM ";
@@ -205,12 +220,15 @@ namespace OPCServer
         public int YearofProduction
         {
             get
-            {  
-                iserror = false;
+            {
+                Error.isError = false;
                 if (Device.SendCom(this.Adres, aYearofProduction, 1, ModBusASCII.RDSettReg) == 1)
                 {
-                    iserror = true;
-                    errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
+                    //iserror = true;
+                    //errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
+                    Error.isError = true;
+                    Error.ErrorCode = 250;
+                    Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не отправлен.";
                     return 0;
                 }
                 else
@@ -223,7 +241,7 @@ namespace OPCServer
                     int kod = Device.ReadData();
                     if (kod != 0)
                     {
-                        iserror = true;
+                        //iserror = true;
                         SetErrStr(kod);
                         return 0;
                     }
@@ -240,11 +258,12 @@ namespace OPCServer
         {
             get
             {
-                iserror = false;
+                Error.isError = false;
                 if (Device.SendCom(this.Adres, aMonthofProdaction, 1, ModBusASCII.RDSettReg) == 1)
                 {
-                    iserror = true;
-                    errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
+                    Error.isError = true;
+                    Error.ErrorCode = 250;
+                    Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не отправлен.";
                     return 0;
                 }
                 else
@@ -257,7 +276,6 @@ namespace OPCServer
                     int kod = Device.ReadData();
                     if (kod != 0)
                     {
-                        iserror = true;
                         SetErrStr(kod);
                         return 0;
                     }
@@ -282,13 +300,14 @@ namespace OPCServer
         /// <param name="Adres">"Адрес Диск 250М"</param>
         public D250M(System.IO.Ports.SerialPort COM, byte Adres)
         {
-            iserror = false;
-            errorcode = "";
+            Error.isError = false;
+            Error.Message = "";
             Device = new ModBusASCII(COM);
             if (Device.porterror)
             {
-                iserror = true;
-                errorcode = Device.porterrstr;
+                Error.isError = true;
+                Error.ErrorCode = 251;
+                Error.Message = Device.porterrstr;
             }
             this.Adres = Adres;
             Delayer = new System.Timers.Timer(Rdelay);
@@ -313,11 +332,12 @@ namespace OPCServer
         /// <returns></returns>
         public bool GetLastArchRecord(ref ArchRecord ArchRec)
         {
-            iserror = false;
+            Error.isError = false;
             if (Device.SendCom(this.Adres, aArchRecord, 5, ModBusASCII.RDDatReg) == 1)
             {
-                iserror = true;
-                errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не отправлен.";
+                Error.isError = true;
+                Error.ErrorCode = 250;
+                Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не отправлен.";
                 return false;
             }
             else
@@ -330,7 +350,6 @@ namespace OPCServer
                 int kod = Device.ReadData();
                 if (kod != 0)
                 {
-                    iserror = true;
                     SetErrStr(kod);
                     return false;
                 }
@@ -350,24 +369,36 @@ namespace OPCServer
 
         private void SetErrStr(int erkod)
         {
-            errorcode = "";
-            if (erkod == 1) errorcode = "Ошибка работы COM-порта " + Device.Portname + ", запрос не принят.";
-            if (erkod == 2) errorcode = "Часть сообщения потеряна или устройство не отвечает, по адресу" + this.Adres + ".";
-            if (erkod == 3) errorcode = "Ошибка CRC, устройства по адресу " + this.Adres + ".";
+            Error.isError = true;
+            Error.Message = "";
+            Error.ErrorCode = erkod;
+            if (erkod == 1) Error.Message = "Ошибка COM-порта " + Device.Portname + ", запрос не принят.";
+            if (erkod == 2) Error.Message = "Часть сообщения потеряна или устройство не отвечает, по адресу" + this.Adres + ".";
+            if (erkod == 3) Error.Message = "Ошибка CRC, устройства по адресу " + this.Adres + ".";
             if (erkod > 10)
             {
                 erkod -= 10;
-                if ((erkod & 1) == 1) errorcode += "Ошибка АЦП, ";
-                if ((erkod & 2) == 2) errorcode += "Ошибка записи/чтения EPROM, ";
-                if ((erkod & 4) == 4) errorcode += "Ошибка ЖКИ-индикатора, ";
-                if ((erkod & 8) == 8) errorcode += "Обрыв датчика, ";
+                if ((erkod & 1) == 1) Error.Message += "Ошибка АЦП, ";
+                if ((erkod & 2) == 2) Error.Message += "Ошибка записи/чтения EPROM, ";
+                if ((erkod & 4) == 4) Error.Message += "Ошибка ЖКИ-индикатора, ";
+                if ((erkod & 8) == 8) Error.Message += "Обрыв датчика, ";
                 //if ((erkod & 16) == 16) errorcode += "Резерв, ";
-                if ((erkod & 32) == 32) errorcode += "Обращение к неизвестному регистру, ";
-                if ((erkod & 64) == 64) errorcode += "Неизвестная команда, ";
-                if ((erkod & 128) == 128) errorcode += "Ошибка CRC, ";
-                errorcode += "утройства по адресу " + this.Adres + ".";
-
+                if ((erkod & 32) == 32) Error.Message += "Обращение к неизвестному регистру, ";
+                if ((erkod & 64) == 64) Error.Message += "Неизвестная команда, ";
+                if ((erkod & 128) == 128) Error.Message += "Ошибка CRC, ";
+                Error.Message += "утройства по адресу " + this.Adres + ".";
             }
+        }
+
+        /// <summary>
+        /// Проверка связи с прибором
+        /// </summary>
+        /// <returns> Возвращает признак наличия связи</returns>
+        public bool IsOnLine()
+        {
+            int temp = YearofProduction;
+            if (Error.isError) return false;
+            else return true;
         }
 
         #endregion
