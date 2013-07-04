@@ -10,6 +10,7 @@ using System.Threading;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 using System.IO;
+using Microsoft.Office.Interop.Excel;
 
 namespace OPCServer
 {
@@ -19,6 +20,8 @@ namespace OPCServer
     public partial class Form1 : Form
     {
         delegate void SetTextCallback(string text);
+
+        Microsoft.Office.Interop.Excel.Application Excel;
 
         /*
          * const string userID = "ST";
@@ -32,12 +35,27 @@ namespace OPCServer
                      ";Password=" + password + ";"; */
 
         /// <summary>
-        /// Строка подключения к базе данных
+        /// Имя пользователя БД
         /// </summary>
-        const string ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = comp)(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=ST;Password=1234";
+        static string user = "ST";
 
         /// <summary>
-        /// частота опроса в мс, желательно не меньше 100*Dnum
+        /// Имя компьютера
+        /// </summary>
+        static string host = "comp";
+
+        /// <summary>
+        /// Пароль пользователя БД
+        /// </summary>
+        static string password = "1234";
+
+        /// <summary>
+        /// Строка подключения к базе данных
+        /// </summary>
+        string ConnectionString;
+
+        /// <summary>
+        /// частота опроса в мс, не меньше 100*Dnum
         /// </summary>
         const int ReadRate = 5000;
 
@@ -102,22 +120,21 @@ namespace OPCServer
         /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
+            Excel = new Microsoft.Office.Interop.Excel.Application();
             //CPORT.Open();
+            ReadMaskFromFile();
+            ReBindQue();
             OracleBaseCon = new OracleConnection();
-            ConnectToOrclBase();
+            //ConnectToOrclBase();
             testDev = new D250M(CPORT, 1);
             if (testDev.Error.isError)
             {
-                string Info;
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                this.textBox2.AppendText(Info + testDev.Error.Message + "\r\n");
+                addToLog(testDev.Error.Message);
                 butReadOnce.Enabled = false;
                 butStartCicleRead.Enabled = false;
                 SaveErrortoBase();
             }
             oprosstarted = false;
-            ReadMaskFromFile();
-            ReBindQue();
             butStartCicleRead.Enabled = true;
             butStopCicleRead.Enabled = false;
         }
@@ -151,19 +168,19 @@ namespace OPCServer
             string Info;
 
             int _month = testDev.MonthofProdaction;
-            if (testDev.Error.isError) ShowError();
+            if (testDev.Error.isError) addToLog(testDev.Error.Message);
 
             int _year = testDev.YearofProduction;
-            if (testDev.Error.isError) ShowError();
+            if (testDev.Error.isError) addToLog(testDev.Error.Message);
 
             int _serial = testDev.SerialNumber;
-            if (testDev.Error.isError) ShowError();
+            if (testDev.Error.isError) addToLog(testDev.Error.Message);
 
             //D250M.ArchRecord _testrecord = new D250M.ArchRecord();
             //if (!testDev.GetLastArchRecord(ref _testrecord)) ShowError();
 
             float datanow = testDev.DataNow;
-            if (testDev.Error.isError) ShowError();
+            if (testDev.Error.isError) addToLog(testDev.Error.Message);
 
             Info = "Прибор произведен: " + _month + ".";
             if (_year < 10) Info += "200" + _year;
@@ -197,11 +214,15 @@ namespace OPCServer
             }
             else
             {
-                this.textBox1.AppendText(text);
+                this.textBox1.Text = text;
                 if (oprosstarted) this.ReceiveDelay.Enabled = true;
             }
         }
 
+        /// <summary>
+        /// Добавление текста ошибки
+        /// </summary>
+        /// <param name="text"></param>
         private void adderrortext(string text)
         {
             if (this.textBox2.InvokeRequired)
@@ -246,7 +267,7 @@ namespace OPCServer
                         LastErr[nowReading] = testDev.Error.ErrorCode;
                         //запись ошибки в базу
                         SaveErrortoBase();
-                        ShowError();
+                        addToLog(testDev.Error.Message);
                         foreach (D250Box Disk in panel1.Controls)
                         {
                             if ((Disk.isWork) && (Disk.Adres == testDev.Adres))
@@ -274,16 +295,6 @@ namespace OPCServer
         }
 
         /// <summary>
-        /// Вывести ошибку в лог
-        /// </summary>
-        private void ShowError()
-        {
-            string Info;
-            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-            adderrortext(Info + testDev.Error.Message + "\r\n");
-        }
-
-        /// <summary>
         /// Попытка подключения к базе данных
         /// </summary>
         private void ConnectToOrclBase()
@@ -294,15 +305,17 @@ namespace OPCServer
                 OracleBaseCon.Open();
                 BaseIsOpen = true;
                 butConnectDB.Enabled = false;
+                btConnetToBD2.Enabled = false;
                 butDisconnectDB.Enabled = true;
+                btPreviewDB.Enabled = true;
             }
             catch (Exception exc)
             {
                 butConnectDB.Enabled = true;
+                btConnetToBD2.Enabled = true;
+                btPreviewDB.Enabled = false;
                 BaseIsOpen = false;
-                string Info;
-                Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                textBox2.AppendText(Info + exc.Message + "\r\n");
+                addToLog(exc.Message);
             }
 
             // Тестовое чтение параметров из БД
@@ -417,9 +430,7 @@ namespace OPCServer
                 }
                 catch (Exception exc)
                 {
-                    string Info;
-                    Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                    textBox2.AppendText(Info + exc.Message + "\r\n");
+                    addToLog(exc.Message);
                 }
             }
             //textBox2.AppendText(sql);
@@ -456,6 +467,9 @@ namespace OPCServer
             ConnectToOrclBase();
         }
 
+        /// <summary>
+        /// Сохранение маски опроса и параметров в файл
+        /// </summary>
         private void SaveMaskToFile()
         {
             BinaryWriter Mask;
@@ -472,6 +486,9 @@ namespace OPCServer
                     Mask.Write(Disk.Adres);
                     Mask.Write(Disk.isWork);
                 }
+                Mask.Write(user);
+                Mask.Write(host);
+                Mask.Write(password);
                 Mask.Close();
             }
             catch (IOException)
@@ -496,11 +513,24 @@ namespace OPCServer
                     Disk.Adres = Mask.ReadInt32();
                     Disk.isWork = Mask.ReadBoolean();
                 }
+                user = Mask.ReadString();
+                host = Mask.ReadString();
+                password = Mask.ReadString();
                 Mask.Close();
+                ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = " + host +
+                                   ")(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=" + user + ";Password=" + password;
+                textBox3.Text = host;
+                textBox4.Text = user;
+                textBox5.Text = "******";
             }
             catch (FileNotFoundException)
             {
-                MessageBox.Show("Не возможно открыть настройки", "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("Не возможно открыть настройки. Введите настройки повторно.", "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                addToLog("Настройки не загружены.");
+            }
+            catch (IOException)
+            {
+                MessageBox.Show("Ошибка ввода вывода.", "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
@@ -511,15 +541,12 @@ namespace OPCServer
         /// <param name="e"></param>
         private void EditQueue(object sender, D250Box.DeventArgs e)
         {
-            string Info;
-            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-
             // Изменение для одного устройства
             D250Box.DeventArgs oleg = (D250Box.DeventArgs)e;
             if (oleg.isWork)
-                textBox2.AppendText(Info + "Устройство " + oleg.Adres + " включено в опрос." + "\r\n");
+                addToLog("Устройство " + oleg.Adres + " включено в опрос.");
             else
-                textBox2.AppendText(Info + "Устройство " + oleg.Adres + " отключено от опроса." + "\r\n");
+                addToLog("Устройство " + oleg.Adres + " отключено от опроса.");
             ReBindQue();
 
         }
@@ -538,12 +565,13 @@ namespace OPCServer
 
             // время задержки опроса зависит от числа устройств
             // в итоге каждое устройство опрашивается 1 раз в 5 секунд
-            ReceiveDelay.Interval = ReadRate / (DevCount + 1);
+            if (DevCount != -1) ReceiveDelay.Interval = ReadRate / (DevCount + 1);
+            else ReceiveDelay.Interval = ReadRate;
         }
 
         private void StartCicleRead(object sender, EventArgs e)
         {
-            
+            addToLog("Опрос начат.");
             ReceiveDelay.Enabled = true;            
             butStartCicleRead.Enabled = false;
             butStopCicleRead.Enabled = true;
@@ -551,6 +579,7 @@ namespace OPCServer
 
         private void StopCicleRead(object sender, EventArgs e)
         {
+            addToLog("Опрос остановлен.");
             oprosstarted = false;
             ReceiveDelay.Enabled = false;
             butStartCicleRead.Enabled = true;
@@ -570,7 +599,6 @@ namespace OPCServer
                 OracleBaseCon.Close();
                 BaseIsOpen = false;
                 butConnectDB.Enabled = true;
-                butWriteToBase.Enabled = false;
             }
         }
 
@@ -652,15 +680,182 @@ namespace OPCServer
                 }
                 catch (Exception exc)
                 {
-                    string Info;
-                    Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
-                    textBox2.AppendText(Info + exc.Message + "\r\n");
+                    addToLog(exc.Message);
                 }
             }
         }
 
+        /// <summary>
+        /// Установить параметры строки соединения с БД
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SetConnParam(object sender, EventArgs e)
+        {
+            if ((textBox3.Text.Length > 0) & (textBox4.Text.Length > 0) & (textBox5.Text.Length > 0))
+            {
+                host = textBox3.Text;
+                user = textBox4.Text;
+                password = textBox5.Text;
+                textBox5.Text = "******";
+                ConnectionString = "Data Source=(Description = (Address_list = (Address= (Protocol = TCP)(Host = " + host +
+                                   ")(PORT = 1521)))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = XE)));User ID=" + user + ";Password=" + password;
+            }
+            else
+            {
+                MessageBox.Show("Не все данные введены.", "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+
+        }
+
+        /// <summary>
+        /// Ограничение на число символов в логе
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SizeControl(object sender, EventArgs e)
+        {
+            if (textBox2.Text.Length > 3300)
+                textBox2.Text = "";
+        }
+
+        /// <summary>
+        /// Вывод сохраненных в БД показаний за выбранный день в таблицу
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ShowDBInTable(object sender, EventArgs e)
+        {
+            if (BaseIsOpen)
+            {
+                try
+                {
+                    string sql;
+                    string[] str = new string[4];
+                    sql = SQLQuereBuilder();
+                    OracleCommand cmd = new OracleCommand(sql, OracleBaseCon);
+                    cmd.CommandType = CommandType.Text;
+                    OracleDataReader dr = cmd.ExecuteReader();
+                    dataGridView1.Rows.Clear();
+                    while (dr.Read())
+                    {
+                        for (int i = 0; i < dr.FieldCount; i++)
+                            str[i] = dr.GetValue(i).ToString();
+                        dataGridView1.Rows.Add(str);
+                    }
+                    btToExcell.Enabled = true;
+                }
+                catch (Exception exc)
+                {
+                    addToLog(exc.Message);
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Построитель запросов по фильтру
+        /// </summary>
+        /// <returns></returns>
+        private string SQLQuereBuilder()
+        {
+            // Например запрос вида:
+            // select * from d250data where readtime > '24-may-13 12.20.10 AM' 
+            // and readtime < '28-may-13 2.20.20 PM' and adres = '1';
+            string sql = "SELECT * FROM d250data WHERE readtime > ";
+            string data = "";
+            data += dateTimePicker1.Value.Day + "-";
+            string month = "";
+            switch (dateTimePicker1.Value.Month)
+            {
+                case 1:
+                    month = "jan";
+                    break;
+                case 2:
+                    month = "feb";
+                    break;
+                case 3:
+                    month = "mar";
+                    break;
+                case 4:
+                    month = "apr";
+                    break;
+                case 5:
+                    month = "may";
+                    break;
+                case 6:
+                    month = "jun";
+                    break;
+                case 7:
+                    month = "jul";
+                    break;
+                case 8:
+                    month = "aug";
+                    break;
+                case 9:
+                    month = "sep";
+                    break;
+                case 10:
+                    month = "oct";
+                    break;
+                case 11:
+                    month = "nov";
+                    break;
+                case 12:
+                    month = "dec";
+                    break;
+            }
+            data += month + "-" + (dateTimePicker1.Value.Year - 2000).ToString();
+            sql += "'" + data + " " + "1.0.0 AM" + "'";
+            sql += " and readtime < ";
+            sql += "'" + data + " " + "12.59.59 PM" + "'";
+            sql += " order by readtime";
+            return sql;
+        }
+
+        /// <summary>
+        /// Добавление в лог строки
+        /// </summary>
+        /// <param name="str">Добавляемая строка.</param>
+        private void addToLog(string str)
+        {
+            string Info;
+            Info = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " ";
+            textBox2.AppendText(Info + str + "\r\n");
+        }
+
+        /// <summary>
+        /// Экспорт данных из таблицы в Excell
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ExportToExcell(object sender, EventArgs e)
+        {
+            Excel.Application.Workbooks.Add(Type.Missing);
+            Excel.Columns.ColumnWidth = 16;
+            Excel.Cells[1, 1] = "№";
+            Excel.Cells[1, 2] = "Адрес";
+            Excel.Cells[1, 3] = "Дата";
+            Excel.Cells[1, 4] = "Показание";
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                Excel.Cells[i + 2, 1] = dataGridView1.Rows[i].Cells[0].Value;
+                Excel.Cells[i + 2, 2] = dataGridView1.Rows[i].Cells[1].Value;
+                Excel.Cells[i + 2, 3] = dataGridView1.Rows[i].Cells[2].Value;
+                Excel.Cells[i + 2, 4] = dataGridView1.Rows[i].Cells[3].Value;
+            }
+            Excel.Visible = true;
+        }
 
         #endregion
+
+
+
+
+
+
+
+
 
     }
 }

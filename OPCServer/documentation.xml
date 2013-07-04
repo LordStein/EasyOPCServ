@@ -194,19 +194,34 @@
             основной класс программы
             </summary>
         </member>
-        <member name="F:OPCServer.Form1.ConnectionString">
-            <summary>
-            Строка подключения к базе данных
-            </summary>
-        </member>
         <member name="F:OPCServer.Form1.ReadRate">
             <summary>
-            частота опроса в мс, желательно не меньше 100*Dnum
+            частота опроса в мс, не меньше 100*Dnum
             </summary>
         </member>
         <member name="F:OPCServer.Form1.Dnum">
             <summary>
             Максимальное число устройств
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.user">
+            <summary>
+            Имя пользователя БД
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.host">
+            <summary>
+            Имя компьютера
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.password">
+            <summary>
+            Пароль пользователя БД
+            </summary>
+        </member>
+        <member name="F:OPCServer.Form1.ConnectionString">
+            <summary>
+            Строка подключения к базе данных
             </summary>
         </member>
         <member name="F:OPCServer.Form1.DevCount">
@@ -279,17 +294,18 @@
             </summary>
             <param name="text"></param>
         </member>
+        <member name="M:OPCServer.Form1.adderrortext(System.String)">
+            <summary>
+            Добавление текста ошибки
+            </summary>
+            <param name="text"></param>
+        </member>
         <member name="M:OPCServer.Form1.ReadInCycle(System.Object,System.EventArgs)">
             <summary>
             Чтение данных в цикле - подготовка
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
-        </member>
-        <member name="M:OPCServer.Form1.ShowError">
-            <summary>
-            Вывести ошибку в лог
-            </summary>
         </member>
         <member name="M:OPCServer.Form1.ConnectToOrclBase">
             <summary>
@@ -317,6 +333,11 @@
             <param name="sender"></param>
             <param name="e"></param>
         </member>
+        <member name="M:OPCServer.Form1.SaveMaskToFile">
+            <summary>
+            Сохранение маски опроса и параметров в файл
+            </summary>
+        </member>
         <member name="M:OPCServer.Form1.EditQueue(System.Object,OPCServer.D250Box.DeventArgs)">
             <summary>
             Изменение очереди устройств
@@ -328,6 +349,46 @@
             <summary>
             Сохранение ошибок работы в базу данных
             </summary>
+        </member>
+        <member name="M:OPCServer.Form1.SetConnParam(System.Object,System.EventArgs)">
+            <summary>
+            Установить параметры строки соединения с БД
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.SizeControl(System.Object,System.EventArgs)">
+            <summary>
+            Ограничение на число символов в логе
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.ShowDBInTable(System.Object,System.EventArgs)">
+            <summary>
+            Вывод сохраненных в БД показаний за выбранный день в таблицу
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:OPCServer.Form1.SQLQuereBuilder">
+            <summary>
+            Построитель запросов по фильтру
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:OPCServer.Form1.addToLog(System.String)">
+            <summary>
+            Добавление в лог строки
+            </summary>
+            <param name="str">Добавляемая строка.</param>
+        </member>
+        <member name="M:OPCServer.Form1.ExportToExcell(System.Object,System.EventArgs)">
+            <summary>
+            Экспорт данных из таблицы в Excell
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
         </member>
         <member name="F:OPCServer.Form1.components">
             <summary>
